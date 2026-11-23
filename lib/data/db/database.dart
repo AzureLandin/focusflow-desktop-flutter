@@ -70,10 +70,11 @@ Future<String?> prepareExistingDatabase(
   if (!file.existsSync()) return null;
   final parent = file.parent;
   final marker = File(p.join(parent.path, markerName));
-  if (marker.existsSync()) return null;
 
   final db = sqlite3.open(file.path);
   try {
+    // 与 db/mod.rs 一致：版本/完整性检查必须先于标记文件判断，
+    // 否则同目录下的新版库或坏库会被错误放行。
     final check = db.select('PRAGMA quick_check').first.columnAt(0);
     if (check != 'ok') {
       throw StateError('旧数据库完整性检查失败，请保留原数据库文件。');
@@ -87,6 +88,7 @@ Future<String?> prepareExistingDatabase(
     if (version < 0) {
       throw StateError('无法识别数据库版本。');
     }
+    if (marker.existsSync()) return null;
 
     final name =
         'before-flutter-${DateTime.now().millisecondsSinceEpoch}-${const Uuid().v4()}.sqlite3';
