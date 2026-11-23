@@ -2,9 +2,14 @@
 
 FocusFlow 是适用于 Windows 的本地日历待办与番茄时钟。打开应用先看到今日待办，也可以安排未来任务、查看历史记录并记录专注时冒出的想法。
 
-## 安装
+## 下载与安装
 
-在 Windows x64 上[下载安装包](https://github.com/LenchLyu/focusflow-desktop/releases/download/v0.10.0/FocusFlow-Setup-0.10.0-x64.exe)，按安装向导启动 FocusFlow。校验文件和版本说明见 [v0.10.0 发布页](https://github.com/LenchLyu/focusflow-desktop/releases/tag/v0.10.0)。安装包和可执行文件未经代码签名，日常使用可离线。
+**[下载 FocusFlow 安装程序（Windows 64 位 `.exe`）](https://github.com/LenchLyu/focusflow-desktop/releases/download/v0.10.0/FocusFlow-Setup-0.10.0-x64.exe)**
+
+1. 下载后双击 `FocusFlow-Setup-0.10.0-x64.exe`，按安装向导完成安装。
+2. 从 Windows 开始菜单打开 **FocusFlow**，即可开始使用。
+
+安装后可离线使用。安装程序未经代码签名。校验文件和版本说明见 [v0.10.0 发布页](https://github.com/LenchLyu/focusflow-desktop/releases/tag/v0.10.0)。
 
 ## 界面截图
 
