@@ -11,3 +11,24 @@ test-output/
 .env.*
 /assets/focusflow-avatar*
 /assets/focusflow-cartoon.*
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+*.iml
+.idea/
+.gen/
+# macOS Flutter 生成的 xcconfig 由 Flutter 在 pub get 时重建
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/Generated*.xcconfig
+macos/.DS_Store
+# Windows Flutter 构建产物
+/windows/build/
+/windows/flutter/generated_plugin_registrant.cc
+/windows/flutter/generated_plugin_registrant.h
+/windows/flutter/generated_plugins.cmake
+
