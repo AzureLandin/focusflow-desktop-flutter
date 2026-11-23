@@ -1,0 +1,11 @@
+node_modules/
+dist/
+release/
+test-output/
+*.lnk
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+/assets/focusflow-avatar*
+/assets/focusflow-cartoon.*
