@@ -2,6 +2,8 @@ node_modules/
 dist/
 release/
 test-output/
+/src-tauri/target/
+/src-tauri/gen/schemas/
 *.lnk
 *.sqlite3
 *.sqlite3-*

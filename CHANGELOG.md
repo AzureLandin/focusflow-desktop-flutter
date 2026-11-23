@@ -1,5 +1,13 @@
 # 版本记录
 
+## 0.11.0 · 2026-11-23
+
+- 新增 Tauri 2、Rust 和 SQLite 后端，复用 React 界面。
+- 延续旧数据库的 schema 1 和 JSON 备份格式，并在首次接管旧库前生成 SQLite 快照。
+- 发布使用系统 WebView2 的 Windows x64 NSIS 安装包，大小为 2.55 MB，比 0.10.0 的已发布安装包小约 98%。
+- 配置 macOS 12+ 的 Universal DMG 构建，待完成 Mac 真机验收、签名和公证。
+- 保留 Electron 回退构建。各平台实际验收状态见[迁移文档](docs/TAURI_MIGRATION.md)。
+
 ## 0.10.0 · 2026-11-23
 
 首次进行 GitHub 版本发布，版本显示为 **0.10**。

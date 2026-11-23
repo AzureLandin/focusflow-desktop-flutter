@@ -1,15 +1,20 @@
-# FocusFlow 桌面版 0.10
+# FocusFlow 桌面版 0.11
 
 FocusFlow 是适用于 Windows 的本地日历待办与番茄时钟。打开应用先看到今日待办，也可以安排未来任务、查看历史记录并记录专注时冒出的想法。
 
+0.11 迁移到 Tauri 2，沿用原有界面、SQLite 数据库和 JSON 备份格式。系统要求、构建和旧数据升级流程见 [Tauri 迁移指南](docs/TAURI_MIGRATION.md)。
+
 ## 下载与安装
 
-**[下载 FocusFlow 安装程序（Windows 64 位 `.exe`）](https://github.com/LenchLyu/focusflow-desktop/releases/download/v0.10.0/FocusFlow-Setup-0.10.0-x64.exe)**
+**[下载 FocusFlow 0.11（Windows x64，2.55 MB）](https://github.com/LenchLyu/focusflow-desktop/releases/download/v0.11.0/FocusFlow_0.11.0_x64-setup.exe)**
 
-1. 下载后双击 `FocusFlow-Setup-0.10.0-x64.exe`，按安装向导完成安装。
-2. 从 Windows 开始菜单打开 **FocusFlow**，即可开始使用。
+1. 从 0.10 升级时，先在旧版设置中导出 JSON 备份并完全退出旧版。新版首次打开旧库前会生成一份 SQLite 快照。
+2. 双击 `FocusFlow_0.11.0_x64-setup.exe`，按安装向导完成安装。
+3. 从 Windows 开始菜单打开 **FocusFlow**，即可开始使用。
 
-安装后可离线使用。安装程序未经代码签名。校验文件和版本说明见 [v0.10.0 发布页](https://github.com/LenchLyu/focusflow-desktop/releases/tag/v0.10.0)。
+安装程序使用系统 WebView2，缺少时会下载引导程序。安装后可离线使用。本次 Windows 安装程序未经代码签名。校验文件和版本说明见 [v0.11.0 发布页](https://github.com/LenchLyu/focusflow-desktop/releases/tag/v0.11.0)。
+
+macOS 12+ 已配置适用于 Intel 和 Apple Silicon 的 Universal DMG 构建。DMG、签名、公证和真机验收待在 Mac 上完成。
 
 ## 界面截图
 
@@ -51,28 +56,29 @@ FocusFlow 是适用于 Windows 的本地日历待办与番茄时钟。打开应�
 
 ## 开发与打包
 
-开发环境需要 Node.js 24 或更新版本，以及 npm。在仓库根目录执行以下命令。首次安装依赖和打包会下载 Electron 和打包工具。
+开发环境需要 Node.js 24、Rust 1.100 和目标系统的开发工具。在仓库根目录执行以下命令。
 
 ```powershell
 npm ci
+npm run build:frontend
 npm run dev
 npm test
+npm run build:win
 npm run test:e2e
-npm run package:win
 ```
 
-`npm run build` 生成 `dist/`，`npm start` 启动已构建的开发版。Windows 安装包位于 `release/v0.10.0/`，同目录的 `win-unpacked/FocusFlow.exe` 可直接运行，需保留相邻的运行库和资源文件。
+`npm run build:frontend` 生成 `dist/frontend/`。Windows NSIS 安装包由 `npm run build:win` 生成。Mac 上使用 `npm run build:mac` 构建 Universal DMG。`npm run dev:electron` 和 `npm run package:win` 用于 Electron 回退版。
 
-`npm run test:e2e` 在隔离的临时 SQLite 数据库中启动 Electron 窗口，用测试时钟验证阶段到期和跨日。运行前可设置 `FOCUSFLOW_E2E_SCREENSHOTS` 保存截图，或用 `FOCUSFLOW_E2E_EXECUTABLE` 指定要验收的 Windows 可执行文件。
+`npm run test:e2e` 在隔离数据库中测试 Windows WebView2 应用。可用 `FOCUSFLOW_E2E_EXECUTABLE` 指定要验收的安装版。
 
 ## 数据与实现
 
-Windows 默认数据目录为 `%APPDATA%\FocusFlow`，数据库文件为 `focusflow.sqlite3`。可使用 `--user-data-dir=绝对路径` 指定独立配置目录，用于测试或并列启动。项目沿用早期 FocusFlow Obsidian 插件的 React、TypeScript 和 esbuild 前端技术栈，桌面版由 Electron 主进程使用 Node.js 内置 SQLite 管理独立数据。
+数据库文件为 `focusflow.sqlite3`。Windows 默认数据目录为 `%APPDATA%\FocusFlow`，macOS 为 `~/Library/Application Support/FocusFlow`。可使用 `--user-data-dir=绝对路径` 指定隔离的测试目录。项目沿用早期 FocusFlow Obsidian 插件的 React、TypeScript 和 esbuild 前端技术栈。
 
-- `src/main/migration-001.sql` 定义任务、日结、会话、番茄轮次、打断、想法与设置表。`Database` 按 `PRAGMA user_version` 依序运行迁移。
-- `src/main/repository.ts` 管理 SQLite 事务与本地日期。`src/main/pomodoro.ts` 集中管理专注状态转换和完成轮次的计数。轮次的统计归入截止时刻对应的本地日期，任务保留自己的计划日期。
-- `src/main/backup.ts` 管理版本化 JSON、恢复校验和事务。`src/shared/model.ts` 定义数据结构、参数校验及桌面桥接口。
-- `src/renderer/` 管理界面。主题由根 CSS token 驱动。将来可在外壳层接入本地壁纸和桌宠，计时与持久化继续通过现有主进程模块维护。
+- 0.11 的 `src-tauri/src/db/` 管理 SQLite 初始化和升级快照，保留 0.10 的表结构及版本号。
+- `src-tauri/src/pomodoro.rs` 管理专注状态、截止时间和轮次计数。轮次归入截止时刻对应的本地日期，任务保留自己的计划日期。
+- `src-tauri/src/backup.rs` 管理版本化 JSON、恢复校验和事务。`src/shared/model.ts` 定义前端数据结构与桌面接口。
+- `src/renderer/` 提供两版共享的界面，`src/main/` 保留 0.10 的 Electron 后端。
 
 ## 开发记录与来源
 

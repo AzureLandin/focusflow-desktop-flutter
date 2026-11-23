@@ -9,7 +9,7 @@ import { UserError } from './database';
 import { Repository } from './repository';
 
 app.setName('FocusFlow');
-app.setAppUserModelId('com.focusflow.desktop');
+if (process.platform === 'win32') app.setAppUserModelId('com.focusflow.desktop');
 const customProfile = app.commandLine.getSwitchValue('user-data-dir');
 if (customProfile) app.setPath('userData', customProfile);
 const indexPath = join(__dirname, 'index.html');
@@ -113,7 +113,9 @@ else {
     handle('workspace:pulse', () => store.pulse());
     handle('workspace:command', (command) => store.command(command));
     handle('workspace:backup', backup);
-    Menu.setApplicationMenu(null);
+    Menu.setApplicationMenu(process.platform === 'darwin'
+      ? Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }, { role: 'windowMenu' }])
+      : null);
     createWindow();
     heartbeat = setInterval(sync, 750);
     powerMonitor.on('resume', sync);

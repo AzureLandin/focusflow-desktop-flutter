@@ -95,12 +95,15 @@ function App() {
     }
     const interval = window.setInterval(() => void pulse(), 900);
     const onFocus = () => void pulse();
+    const onVisible = () => { if (document.visibilityState === 'visible') onFocus(); };
     window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
     const removeChime = window.focusflow?.onChime(playChime);
     return () => {
       closed = true;
       window.clearInterval(interval);
       window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
       removeChime?.();
     };
   }, []);

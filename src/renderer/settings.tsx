@@ -17,7 +17,7 @@ export function Settings({ settings, dataPath, run, backup, busy }: {
   const switches = [
     ['finalLongBreak', '会话结束后仍提示长休息', '当最后一个番茄刚好达到长休息间隔时显示提示。'],
     ['sound', '提示音', '每个专注或休息阶段结束时播放。'],
-    ['notifications', '系统通知', '阶段结束时发送 Windows 通知。'],
+    ['notifications', '系统通知', '阶段结束时发送系统通知。'],
   ] as const;
   return <main className="page settings-page"><header className="page-header"><h1>设置</h1></header>
     <form className="settings-form" onSubmit={save}>

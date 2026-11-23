@@ -8,12 +8,22 @@
   "main": "dist/main.cjs",
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && node scripts/build.mjs",
-    "dev": "npm run build && electron .",
+    "build": "tauri build",
+    "dev": "tauri dev",
+    "build:frontend": "tsc --noEmit && node scripts/build.mjs frontend",
+    "build:win": "tauri build --bundles nsis",
+    "build:mac": "tauri build --bundles dmg --target universal-apple-darwin",
+    "build:electron": "tsc --noEmit && node scripts/build.mjs",
+    "dev:electron": "npm run build:electron && electron .",
     "start": "electron .",
-    "test": "node scripts/build.mjs test && node --test dist/domain.test.cjs",
-    "test:e2e": "npm run build && node --test tests/desktop.test.mjs",
-    "package:win": "npm run build && electron-builder --win nsis --x64"
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build:frontend && npm run test:rust",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml --locked",
+    "test:e2e": "node --test tests/tauri.test.mjs",
+    "test:electron": "node scripts/build.mjs test && node --test dist/domain.test.cjs",
+    "test:e2e:electron": "npm run build:electron && node --test tests/desktop.test.mjs",
+    "package:win": "npm run build:electron && electron-builder --win nsis --x64 --publish never",
+    "package:mac": "npm run build:electron && electron-builder --mac dmg --arm64 --x64 --publish never --config.mac.identity=- --config.mac.hardenedRuntime=false"
   },
   "engines": {
     "node": ">=24"
@@ -24,38 +34,56 @@
       "output": "release/v${version}"
     },
     "files": [
-      "dist/**",
-      "!dist/*.test.cjs"
+      "dist/main.cjs",
+      "dist/preload.cjs",
+      "dist/renderer.js",
+      "dist/renderer.css",
+      "dist/index.html",
+      "dist/icon.png",
+      "dist/LICENSE",
+      "dist/THIRD_PARTY_LICENSES.txt"
     ],
+    "npmRebuild": false,
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.icns",
+      "artifactName": "FocusFlow-${version}-mac-${arch}.${ext}",
+      "notarize": false
+    },
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
+      "electronLanguages": [
+        "en-US",
+        "zh-CN",
+        "zh-TW"
+      ],
       "signExecutable": false,
       "artifactName": "FocusFlow-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
+      "runAfterFinish": true,
       "installerIcon": "assets/icon.ico",
       "uninstallerIcon": "assets/icon.ico"
     }
   },
-  "dependencies": {
-    "date-fns": "^4.4.0",
-    "lucide-react": "^1.78.0",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "zod": "^4.6.7"
-  },
   "devDependencies": {
+    "@tauri-apps/api": "^2.12.5",
+    "@tauri-apps/cli": "^2.12.6",
     "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "date-fns": "^4.4.0",
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0",
     "esbuild": "^0.28.2",
+    "lucide-react": "^1.78.0",
     "playwright-core": "^1.65.1",
-    "typescript": "^7.0.2"
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "zod": "^4.6.7"
   }
 }

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "FocusFlow",
+  "version": "0.11.0",
+  "identifier": "com.focusflow.desktop",
+  "build": {
+    "beforeDevCommand": "npm run build:frontend",
+    "beforeBuildCommand": "npm run build:frontend",
+    "frontendDist": "../dist/frontend"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [{
+      "label": "main", "title": "FocusFlow", "width": 1240, "height": 840,
+      "minWidth": 800, "minHeight": 590, "visible": false, "create": false
+    }],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "category": "Utility",
+    "shortDescription": "本地日历待办与番茄时钟",
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico", "icons/icon.icns"],
+    "windows": { "webviewInstallMode": { "type": "downloadBootstrapper" }, "nsis": { "installMode": "currentUser" } },
+    "macOS": { "minimumSystemVersion": "12.0" }
+  }
+}
