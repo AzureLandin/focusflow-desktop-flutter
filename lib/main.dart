@@ -4,7 +4,6 @@ import 'dart:ui' show AppExitResponse;
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/data_dir.dart';
