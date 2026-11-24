@@ -387,6 +387,7 @@ class ActiveSession {
   int get plannedPomodoros => session.plannedPomodoros;
   int get phaseStartedAt => session.phaseStartedAt;
   int get phaseEndsAt => session.phaseEndsAt;
+  int get endingBreak => session.endingBreak;
 }
 
 class DayData {
@@ -413,6 +414,18 @@ class Pulse {
   final int now;
   final String today;
   final ActiveSession? session;
+
+  Pulse copyWith({
+    int? now,
+    String? today,
+    ActiveSession? session,
+    bool clearSession = false,
+  }) =>
+      Pulse(
+        now: now ?? this.now,
+        today: today ?? this.today,
+        session: clearSession ? null : (session ?? this.session),
+      );
 }
 
 class Workspace {
@@ -431,6 +444,23 @@ class Workspace {
   final List<DayRecord> calendar;
   final Settings settings;
   final String dataPath;
+
+  Workspace copyWith({
+    Pulse? pulse,
+    DayData? todayData,
+    DayData? selectedData,
+    List<DayRecord>? calendar,
+    Settings? settings,
+    String? dataPath,
+  }) =>
+      Workspace(
+        pulse: pulse ?? this.pulse,
+        todayData: todayData ?? this.todayData,
+        selectedData: selectedData ?? this.selectedData,
+        calendar: calendar ?? this.calendar,
+        settings: settings ?? this.settings,
+        dataPath: dataPath ?? this.dataPath,
+      );
 }
 
 class Query {
