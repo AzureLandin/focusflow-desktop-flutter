@@ -53,12 +53,12 @@ class TestDesktopApi implements DesktopApi {
   }
 
   @override
-  Future<void> run(Command command) async {
+  Future<TimerEvent?> run(Command command) async {
     commands.add(command);
     if (failOn.contains(command.runtimeType)) {
       throw StateError('FF:模拟命令失败');
     }
-    await _repository.run(command, _now);
+    return _repository.run(command, _now);
   }
 
   @override

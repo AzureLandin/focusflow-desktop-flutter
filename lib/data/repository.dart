@@ -143,15 +143,17 @@ class Repository {
 
   // --------------------------------------------------------------- command
 
-  Future<void> run(Command command, [int? now]) =>
+  /// 返回 sync 阶段产生的 TimerEvent，供 UI 触发提示音/通知
+  /// （对齐 src-tauri/src/lib.rs:91-97 的 with_repository）。
+  Future<TimerEvent?> run(Command command, [int? now]) =>
       _lock(() => _run(command, nowOf(now)));
 
   /// 兼容 Rust 侧的命名。
-  Future<void> command(Command value, [int? now]) => run(value, now);
+  Future<TimerEvent?> command(Command value, [int? now]) => run(value, now);
 
-  Future<void> _run(Command input, int now) async {
+  Future<TimerEvent?> _run(Command input, int now) async {
     final command = input.validate();
-    await _sync(now);
+    final event = await _sync(now);
     final today = localDay(now);
     await db.transaction(() async {
       final active = await pomodoro.activeSession(db);
@@ -160,6 +162,7 @@ class Repository {
       }
       await _apply(command, active, today, now);
     });
+    return event;
   }
 
   Future<void> _apply(

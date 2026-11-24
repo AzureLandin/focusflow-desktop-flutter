@@ -3,6 +3,7 @@
 library;
 
 import '../data/repository.dart';
+import '../platform/backup_io.dart';
 import '../shared/model.dart';
 
 abstract class DesktopApi {
@@ -11,9 +12,10 @@ abstract class DesktopApi {
   /// 心跳：先 sync（可能推进阶段），再取 pulse。
   Future<PulseResult> pulse();
 
-  Future<void> run(Command command);
+  /// 返回命令执行前 sync 产生的事件（若有），供提示音/通知使用。
+  Future<TimerEvent?> run(Command command);
 
-  /// 'export' / 'import'；文件对话框属于步骤 6，此处只保留 hook。
+  /// 'export' / 'import'；返回 false 表示用户取消，不应提示错误。
   Future<bool> backup(String action);
 
   Future<void> dispose();
@@ -43,12 +45,17 @@ class RepositoryDesktopApi implements DesktopApi {
   }
 
   @override
-  Future<void> run(Command command) => _repository.run(command);
+  Future<TimerEvent?> run(Command command) => _repository.run(command);
 
   @override
   Future<bool> backup(String action) async {
     final handler = backupHandler;
-    return handler == null ? false : handler(action);
+    if (handler != null) return handler(action);
+    return switch (action) {
+      'export' => exportBackupWithDialog(_repository),
+      'import' => importBackupWithDialog(_repository),
+      _ => false,
+    };
   }
 
   @override

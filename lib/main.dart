@@ -1,13 +1,32 @@
+import 'dart:io';
+
 import 'package:material_ui/material_ui.dart';
+import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'data/db/data_dir.dart';
+import 'platform/platform_hooks.dart';
+import 'platform/single_instance.dart';
 import 'state/providers.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 对齐 tauri-plugin-single-instance：已有实例时直接退出。
+  final lockFile = File(p.join(resolveDataDir().path, 'focusflow.lock'));
+  if (!SingleInstanceLock.acquire(lockFile)) {
+    // ignore: avoid_print
+    print('FocusFlow 已在运行，退出当前实例。');
+    return;
+  }
+
+  // 提前预热插件，失败由各 hook 内部静默降级。
+  await ChimePlayer.prime();
+  await SystemNotifier.prime();
+
   await configureWindow();
   runApp(const ProviderScope(child: FocusFlowApp()));
 }

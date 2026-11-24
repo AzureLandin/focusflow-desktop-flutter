@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../data/db/data_dir.dart';
 import '../data/repository.dart';
+import '../platform/platform_hooks.dart';
 import '../shared/dates.dart';
 import '../shared/model.dart';
 import 'desktop_api.dart';
@@ -25,9 +26,11 @@ final desktopApiProvider = FutureProvider<DesktopApi>((ref) async {
   return RepositoryDesktopApi(repository);
 });
 
-/// 步骤 6 接 audioplayers / local_notifier 时替换这两个 hook。
-final chimeHookProvider = Provider<void Function()>((ref) => () {});
-final notifyHookProvider = Provider<void Function(String)>((ref) => (_) {});
+/// 平台能力 hook；插件失败时内部静默降级（见 platform_hooks.dart）。
+/// 测试可 override 成假实现来断言触发条件。
+final chimeHookProvider = Provider<void Function()>((ref) => ChimePlayer.play);
+final notifyHookProvider =
+    Provider<void Function(String)>((ref) => SystemNotifier.show);
 
 // ------------------------------------------------------------------ 主题
 
@@ -247,8 +250,15 @@ class UiController extends AsyncNotifier<UiState> {
       final interrupted = command is Interrupt
           ? current.workspace?.pulse.session
           : null;
-      await _api!.run(command);
+      final event = await _api!.run(command);
       await refresh();
+      if (event != null) {
+        final settings = current.workspace!.settings;
+        if (settings.sound) ref.read(chimeHookProvider)();
+        if (settings.notifications) {
+          ref.read(notifyHookProvider)(event.message);
+        }
+      }
       if (command is Resolve || command is Interrupt) {
         _update((s) => s.copyWith(page: UiPage.today));
       }
