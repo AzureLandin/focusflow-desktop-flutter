@@ -29,3 +29,35 @@ jobs:
 
       - name: Test
         run: flutter test
+
+      # ---- 构建可运行产物（供下载验收）：macOS arm64 + Windows x64 ----
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        # 无签名证书的环境跳过 xcodebuild 签名，产物随后做临时签名（arm64 必需）。
+        run: |
+          flutter config --enable-macos-desktop
+          flutter build macos --release
+          cd build/macos/Build/Products/Release
+          codesign --force --deep --sign - FocusFlow.app
+          zip -r -y FocusFlow-macos-arm64.app.zip FocusFlow.app
+        env:
+          CODE_SIGNING_ALLOWED: "NO"
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: flutter build windows --release
+
+      - name: Upload artifact (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusFlow-macos-arm64
+          path: build/macos/Build/Products/Release/FocusFlow-macos-arm64.app.zip
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FocusFlow-windows-x64
+          path: build/windows/x64/runner/Release/
