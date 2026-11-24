@@ -477,34 +477,38 @@ class _ToastState extends State<_Toast> {
     return Positioned(
       right: 19,
       bottom: 19,
-      child: Container(
-        key: Key(widget.notice.isError ? 'notice-error' : 'notice'),
-        constraints: const BoxConstraints(maxWidth: 415),
-        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
-        decoration: BoxDecoration(
-          color: t.surface,
-          border: Border.all(color: t.line),
-          borderRadius: t.mediumBorder,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              widget.notice.isError ? Icons.error_outline : Icons.check,
-              size: 17,
-              color: widget.notice.isError ? t.warn : t.accentText,
-            ),
-            const SizedBox(width: 8),
-            Flexible(child: Text(widget.notice.message,
-                style: TextStyle(
-                    color: widget.notice.isError ? t.warn : t.accentText))),
-            if (widget.notice.isError)
-              FfButton(
-                label: '关闭',
-                variant: FfButtonVariant.ghost,
-                onPressed: widget.onClose,
+      child: Material(
+        // 无 Material 祖先时 Text 会落入 48px 的框架 fallback 样式。
+        type: MaterialType.transparency,
+        child: Container(
+          key: Key(widget.notice.isError ? 'notice-error' : 'notice'),
+          constraints: const BoxConstraints(maxWidth: 415),
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+          decoration: BoxDecoration(
+            color: t.surface,
+            border: Border.all(color: t.line),
+            borderRadius: t.mediumBorder,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.notice.isError ? Icons.error_outline : Icons.check,
+                size: 17,
+                color: widget.notice.isError ? t.warn : t.accentText,
               ),
-          ],
+              const SizedBox(width: 8),
+              Flexible(child: Text(widget.notice.message,
+                  style: TextStyle(
+                      color: widget.notice.isError ? t.warn : t.accentText))),
+              if (widget.notice.isError)
+                FfButton(
+                  label: '关闭',
+                  variant: FfButtonVariant.ghost,
+                  onPressed: widget.onClose,
+                ),
+            ],
+          ),
         ),
       ),
     );
