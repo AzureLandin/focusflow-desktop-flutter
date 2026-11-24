@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:ui' show AppExitResponse;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:window_manager/window_manager.dart';
 
 import 'data/db/data_dir.dart';
@@ -11,6 +13,10 @@ import 'platform/single_instance.dart';
 import 'state/providers.dart';
 import 'ui/app_shell.dart';
 import 'ui/theme.dart';
+
+/// 引擎发起退出时释放单实例锁（窗口直接关闭等路径由启动时的 pid 检测兜底）。
+// ignore: unused_element
+AppLifecycleListener? _exitHook;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +28,12 @@ Future<void> main() async {
     print('FocusFlow 已在运行，退出当前实例。');
     return;
   }
+  _exitHook = AppLifecycleListener(
+    onExitRequested: () async {
+      SingleInstanceLock.release();
+      return AppExitResponse.exit;
+    },
+  );
 
   // 提前预热插件，失败由各 hook 内部静默降级。
   await ChimePlayer.prime();

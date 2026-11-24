@@ -52,4 +52,18 @@ void main() {
     expect(SingleInstanceLock.holds(lock), isFalse);
     expect(SingleInstanceLock.holds(other), isFalse);
   });
+
+  test('锁内 pid 已死时立即接管（不受 10 分钟窗口限制）', () {
+    // 不可能存活的超大 pid；文件 mtime 是新鲜的。
+    lock.writeAsStringSync('999999999 ${DateTime.now().millisecondsSinceEpoch}\n');
+    expect(SingleInstanceLock.acquire(lock), isTrue);
+    expect(SingleInstanceLock.holds(lock), isTrue);
+  });
+
+  test('锁内 pid 仍存活时拒绝启动', () {
+    // 测试进程自身的 pid 一定存活。
+    lock.writeAsStringSync('$pid ${DateTime.now().millisecondsSinceEpoch}\n');
+    expect(SingleInstanceLock.acquire(lock), isFalse);
+    expect(SingleInstanceLock.holds(lock), isFalse);
+  });
 }

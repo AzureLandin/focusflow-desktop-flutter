@@ -1,8 +1,9 @@
 /// 单实例：数据目录下的锁文件 + dart:io 独占文件锁（进程存活期持有）。
 ///
-/// 三层保护：同进程静态标记、文件存在时间（陈旧锁可接管）、OS 独占锁。
-/// 按路径各持一个句柄（不同数据目录的应用实例互不干扰）。
-/// 任一文件系统能力不可用时降级为“允许启动”，不让应用崩溃。
+/// 判定链：同进程静态标记 → 锁内 pid 存活检测 → 文件年龄（陈旧接管）→ OS 独占锁。
+/// pid 已死则立即接管（正常退出未清锁/崩溃后可马上重启）；检测手段不可用时
+/// 回退到 10 分钟陈旧窗口。按路径各持一个句柄，任一文件系统能力不可用时
+/// 降级为“允许启动”，不让应用崩溃。
 library;
 
 import 'dart:async';
@@ -29,9 +30,18 @@ class SingleInstanceLock {
       if (!parent.existsSync()) parent.createSync(recursive: true);
 
       if (file.existsSync()) {
-        final age = DateTime.now().difference(file.statSync().modified);
-        if (age < kLockStaleAfter) return false;
-        file.deleteSync();
+        final info = _readLockInfo(file);
+        if (info != null) {
+          // pid 还活着：真有另一个实例（pid 被复用时宁可拒绝，行为不变）。
+          if (_pidAlive(info.$1)) return false;
+          // pid 已死：立即接管，不受 10 分钟窗口限制。
+          file.deleteSync();
+        } else {
+          // 锁不可解析：回退到陈旧时间规则。
+          final age = DateTime.now().difference(file.statSync().modified);
+          if (age < kLockStaleAfter) return false;
+          file.deleteSync();
+        }
       }
 
       handle = file.openSync(mode: FileMode.write);
@@ -101,4 +111,36 @@ class SingleInstanceLock {
 
   /// 供测试读取：当前是否持有某个路径的锁。
   static bool holds(File file) => _handles.containsKey(file.absolute.path);
+
+  /// 解析锁文件内容 `<pid> <毫秒时间戳>`；不可解析返回 null。
+  static (int, int)? _readLockInfo(File file) {
+    try {
+      final parts = file.readAsStringSync().trim().split(RegExp(r'\s+'));
+      if (parts.length != 2) return null;
+      final pid = int.tryParse(parts[0]);
+      final stamp = int.tryParse(parts[1]);
+      if (pid == null || stamp == null || pid <= 0) return null;
+      return (pid, stamp);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// pid 是否仍存活。POSIX 用 `kill -0`，Windows 用 `tasklist` 过滤；
+  /// 检测手段不可用时保守视为存活（回退到陈旧时间规则）。
+  static bool _pidAlive(int pid) {
+    try {
+      if (Platform.isWindows) {
+        final result = Process.runSync(
+          'tasklist',
+          ['/FI', 'PID eq $pid', '/FO', 'CSV', '/NH'],
+        );
+        final out = result.stdout.toString();
+        return !out.contains('No tasks') && out.contains('"$pid"');
+      }
+      return Process.runSync('kill', ['-0', '$pid']).exitCode == 0;
+    } on Object {
+      return true;
+    }
+  }
 }
